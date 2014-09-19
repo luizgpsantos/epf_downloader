@@ -1,25 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import time
 import argparse
 from epf_downloader import EPFDownloader
+from urlgrabber import urlgrab
+from urlgrabber.progress import text_progress_meter
 
 
 class EPFDowloaderFull(EPFDownloader):
 
-    EPF_FULL_URL = "https://feeds.itunes.apple.com/feeds/epf/v3/full/current/"
+    EPF_FULL_URL = "https://%s:%s@feeds.itunes.apple.com/feeds/epf/v3/full/current/"
 
     def perform_download(self):
         to_download = set()
-        for epf_file_info in self.list_current(self.EPF_FULL_URL):
+        for epf_file_info in self.files_available(self.EPF_FULL_URL):
             epf_file, epf_file_date = epf_file_info
 
-            if not self.options.get(epf_file) or epf_file_date > time.strptime(self.options.get(epf_file), self.EPF_DATE_FORMAT):
+            if epf_file not in self.options["downloads"]:
                 to_download.add(epf_file)
-                self.options[epf_file] = time.strftime(self.EPF_DATE_FORMAT, epf_file_date)
+                self.options["downloads"].append(epf_file)
 
         for file_to_download in to_download:
             print "download de %s" % file_to_download
+            self._download_file(file_to_download)
+
+    def _download_file(self, filename):
+        url = "%s%s" % (self.EPF_FULL_URL % (self.username, self.password), filename)
+        urlgrab(url, filename, progress_obj=text_progress_meter())
 
 
 def main():

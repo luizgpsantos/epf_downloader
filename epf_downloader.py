@@ -32,7 +32,7 @@ class EPFDownloader(object):
         self.password = password
 
         if not os.path.exists(CONFIG_PATH):
-            self.options = {}
+            self.options = dict(downloads=[])
             _dumpDict(self.options, CONFIG_PATH)
         else:
             self.options = _loadDict(CONFIG_PATH)
@@ -44,11 +44,11 @@ class EPFDownloader(object):
         self.perform_download()
         _dumpDict(self.options, CONFIG_PATH)
 
-    def list_current(self, epf_url):
+    def files_available(self, epf_url):
         directory_list = requests.get(epf_url, auth=HTTPBasicAuth(self.username, self.password)).text
-        return self.get_filenames(directory_list)
+        return self._get_filenames(directory_list)
 
-    def get_filenames(self, html):
+    def _get_filenames(self, html):
         files = []
         for table_line in BeautifulSoup(html, parseOnlyThese=SoupStrainer('tr')):
             line = table_line.findAll("td")

@@ -9,9 +9,6 @@ from requests.auth import HTTPBasicAuth
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 
 
-CONFIG_PATH = "./epf_downloader_config.json"
-
-
 def _dumpDict(aDict, filePath):
     with open(filePath, mode='w+') as f:
         json.dump(aDict, f, indent=4)
@@ -27,22 +24,23 @@ class EPFDownloader(object):
     EPF_FILE_PATERN = r'.*\d{8}\.tbz$'
     EPF_DATE_FORMAT = "%d-%b-%Y %H:%M"
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, target_dir):
         self.username = username
         self.password = password
+        self.target_dir = target_dir
+        self.config_path = "%s/epf_downloader_config.json" % self.target_dir
 
-        if not os.path.exists(CONFIG_PATH):
+        if not os.path.exists(self.config_path):
             self.options = dict(downloads=[])
-            _dumpDict(self.options, CONFIG_PATH)
+            _dumpDict(self.options, self.config_path)
         else:
-            self.options = _loadDict(CONFIG_PATH)
+            self.options = _loadDict(self.config_path)
 
     def perform_download(self):
         raise NotImplementedError()
 
     def download_files(self):
         self.perform_download()
-        _dumpDict(self.options, CONFIG_PATH)
 
     def files_available(self, epf_url):
         directory_list = requests.get(epf_url, auth=HTTPBasicAuth(self.username, self.password)).text
